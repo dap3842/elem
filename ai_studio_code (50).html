@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Электронное строение атома — Энергетическая лесенка</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card-bg: rgba(30, 41, 59, 0.75);
+      --card-border: rgba(255, 255, 255, 0.12);
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent: #38bdf8;
+      --accent-glow: rgba(56, 189, 248, 0.25);
+      --cell-bg: rgba(15, 23, 42, 0.6);
+      --cell-border: #94a3b8;
+      --arrow-up: #38bdf8;
+      --arrow-down: #f43f5e;
+      --grid-line: rgba(255, 255, 255, 0.05);
+      --font: system-ui, -apple-system, sans-serif;
+    }
+
+    /* 1. Тема «Школьная доска» */
+    body.theme-chalkboard {
+      --bg: #1c352d;
+      --card-bg: rgba(22, 47, 39, 0.88);
+      --card-border: rgba(255, 255, 255, 0.22);
+      --text: #fcfbf7;
+      --text-muted: #cbd5e1;
+      --accent: #fde047;
+      --accent-glow: rgba(253, 224, 71, 0.2);
+      --cell-bg: rgba(14, 33, 27, 0.7);
+      --cell-border: #f1f5f9;
+      --arrow-up: #fef08a;
+      --arrow-down: #93c5fd;
+      --grid-line: rgba(255, 255, 255, 0.07);
+    }
+
+    /* 2. Тема «Тетрадь в клетку» (как на фото) */
+    body.theme-notebook {
+      --bg: #f4f6fb;
+      --card-bg: #ffffff;
+      --card-border: #cbd5e1;
+      --text: #1e293b;
+      --text-muted: #64748b;
+      --accent: #2563eb;
+      --accent-glow: rgba(37, 99, 235, 0.15);
+      --cell-bg: #ffffff;
+      --cell-border: #1e3a8a; /* Синяя шариковая ручка */
+      --arrow-up: #1d4ed8;
+      --arrow-down: #dc2626;
+      --grid-line: #dbeafe; /* Тетрадочные синие клеточки */
+      font-family: 'Comic Sans MS', 'Segoe Print', cursive, var(--font);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      min-height: 100vh;
+      padding: 24px 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      transition: background-color 0.25s, color 0.25s;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 1100px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* Панель управления */
+    .controls-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      backdrop-filter: blur(10px);
+      border-radius: 16px;
+      padding: 20px 24px;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      align-items: end;
+    }
+
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    label {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    input, select, button {
+      background: var(--cell-bg);
+      border: 1px solid var(--card-border);
+      color: var(--text);
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-size: 15px;
+      outline: none;
+      font-family: inherit;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    input:focus, select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+
+    .btn-theme {
+      cursor: pointer;
+      font-weight: 600;
+    }
+    .btn-theme:hover {
+      filter: brightness(1.1);
+    }
+
+    .quick-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      grid-column: 1 / -1;
+      padding-top: 6px;
+      align-items: center;
+    }
+
+    .chip {
+      padding: 5px 12px;
+      border-radius: 18px;
+      font-size: 13px;
+      cursor: pointer;
+      border: 1px solid var(--card-border);
+      background: var(--cell-bg);
+    }
+    .chip:hover, .chip.active {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+    body.theme-chalkboard .chip:hover {
+      color: #1c352d;
+    }
+
+    /* ВЕРХНЯЯ СТРОЧКА КАК НА ДОСКЕ */
+    .chalkboard-header-row {
+      background: var(--card-bg);
+      border: 2px solid var(--card-border);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      padding: 24px 30px;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      overflow-x: auto;
+    }
+
+    .element-symbol-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-width: 80px;
+    }
+    .element-symbol {
+      font-size: 54px;
+      font-weight: 800;
+      line-height: 1;
+      color: var(--accent);
+    }
+    .element-name {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    /* (+Z) ) ) */
+    .bohr-diagram {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      background: rgba(0, 0, 0, 0.08);
+      border-radius: 12px;
+    }
+
+    .nucleus-circle {
+      width: 54px;
+      height: 54px;
+      border: 2px solid var(--text);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 19px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .shell-column {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      min-width: 30px;
+    }
+
+    .arc-symbol {
+      font-size: 46px;
+      line-height: 48px;
+      font-weight: 300;
+      user-select: none;
+    }
+
+    .shell-electrons {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    /* Формула (1s² 2s²...) */
+    .electron-formula {
+      font-size: 26px;
+      font-family: 'Courier New', Courier, monospace;
+      font-weight: 700;
+      white-space: nowrap;
+      padding: 10px 16px;
+      background: rgba(0, 0, 0, 0.08);
+      border-radius: 12px;
+    }
+
+    .electron-formula sup {
+      color: var(--accent);
+      font-size: 18px;
+    }
+
+    /* ОСНОВНАЯ КАРТОЧКА: ЛЕСЕНКА ОРБИТАЛЕЙ (КАК В ТЕТРАДИ) */
+    .ladder-card {
+      background: var(--card-bg);
+      border: 2px solid var(--card-border);
+      border-radius: 20px;
+      padding: 24px;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+      position: relative;
+    }
+
+    .ladder-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+
+    .ladder-title {
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    /* Холст с тетрадной клеткой */
+    .ladder-scroll-wrapper {
+      width: 100%;
+      overflow-x: auto;
+      padding-bottom: 12px;
+    }
+
+    .ladder-stage {
+      position: relative;
+      background-size: 38px 38px;
+      background-image: 
+        linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+        linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
+      border-radius: 14px;
+      border: 1px dashed var(--card-border);
+      margin-left: 36px; /* место под ось энергии E */
+    }
+
+    /* Ось энергии слева */
+    .energy-axis {
+      position: absolute;
+      left: -32px;
+      bottom: 25px;
+      top: 15px;
+      width: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      user-select: none;
+    }
+
+    .energy-axis-line {
+      width: 2px;
+      height: 100%;
+      background: var(--text-muted);
+      position: relative;
+    }
+
+    .energy-axis-line::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -4px;
+      width: 0;
+      height: 0;
+      border-left: 5px solid transparent;
+      border-right: 5px solid transparent;
+      border-bottom: 9px solid var(--text-muted);
+    }
+
+    .energy-label {
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--accent);
+      margin-bottom: 4px;
+    }
+
+    /* Блок подуровня (1s, 2s, 2p...) */
+    .ladder-step {
+      position: absolute;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .ladder-boxes-row {
+      display: flex;
+    }
+
+    .ladder-box {
+      width: 38px;
+      height: 38px;
+      border: 2px solid var(--cell-border);
+      margin-right: -2px; /* Соединение соседних ячеек в цельный блок */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      background: var(--cell-bg);
+      font-size: 20px;
+      font-weight: 900;
+      user-select: none;
+      box-sizing: border-box;
+    }
+
+    .ladder-step-label {
+      position: absolute;
+      top: 100%;
+      margin-top: 4px;
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--text);
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+    }
+
+    .arrow-up {
+      color: var(--arrow-up);
+      line-height: 1;
+    }
+    .arrow-down {
+      color: var(--arrow-down);
+      line-height: 1;
+    }
+
+    @media (max-width: 768px) {
+      .chalkboard-header-row {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .electron-formula {
+        font-size: 19px;
+      }
+    }
+  </style>
+</head>
+<body class="theme-notebook">
+
+  <div class="container">
+    
+    <!-- Панель управления -->
+    <div class="controls-card">
+      <div class="control-group">
+        <label for="elementSelect">Элемент</label>
+        <select id="elementSelect"></select>
+      </div>
+
+      <div class="control-group">
+        <label for="chargeInput">Заряд ядра (Z)</label>
+        <input type="number" id="chargeInput" min="1" max="36" value="6">
+      </div>
+
+      <div class="control-group">
+        <label for="ionCharge">Ион / Заряд</label>
+        <select id="ionCharge">
+          <option value="0">0 (Атом нейтрален)</option>
+          <option value="1">+1 (катион)</option>
+          <option value="2">+2 (катион)</option>
+          <option value="3">+3 (катион)</option>
+          <option value="-1">-1 (анион)</option>
+          <option value="-2">-2 (анион)</option>
+          <option value="-3">-3 (анион)</option>
+        </select>
+      </div>
+
+      <div class="control-group">
+        <label>Стиль оформления</label>
+        <button class="btn-theme" id="themeBtn">🎨 Тема: Тетрадь ✎</button>
+      </div>
+
+      <div class="quick-chips">
+        <span style="font-size: 13px; color: var(--text-muted);">Быстрый выбор:</span>
+        <button class="chip" data-z="1">H</button>
+        <button class="chip" data-z="2">He</button>
+        <button class="chip" data-z="6">C</button>
+        <button class="chip" data-z="7">N</button>
+        <button class="chip" data-z="8">O</button>
+        <button class="chip" data-z="11">Na</button>
+        <button class="chip" data-z="13">Al</button>
+        <button class="chip" data-z="17">Cl</button>
+        <button class="chip" data-z="24">Cr (проскок)</button>
+        <button class="chip" data-z="26">Fe</button>
+        <button class="chip" data-z="29">Cu (проскок)</button>
+      </div>
+    </div>
+
+    <!-- ВЕРХНЯЯ СТРОЧКА КАК НА ДОСКЕ -->
+    <div class="chalkboard-header-row">
+      <div class="element-symbol-box">
+        <div class="element-symbol" id="displaySymbol">C</div>
+        <div class="element-name" id="displayName">Углерод (6)</div>
+      </div>
+
+      <!-- (+Z) ) ) -->
+      <div class="bohr-diagram" id="bohrDiagram"></div>
+
+      <!-- 1s² 2s² 2p² -->
+      <div class="electron-formula" id="formulaShort"></div>
+
+      <!-- Внешняя ячейка (крайняя правая) -->
+      <div id="lastSubshellPreview"></div>
+    </div>
+
+    <!-- ЭНЕРГЕТИЧЕСКАЯ ЛЕСЕНКА ЯЧЕЕК (КАК В ТЕТРАДИ) -->
+    <div class="ladder-card">
+      <div class="ladder-header">
+        <div class="ladder-title">Электронно-графическая формула (лесенка уровней)</div>
+        <div style="font-size: 14px; font-weight: 600; color: var(--accent);" id="electronCountBadge">6 ē</div>
+      </div>
+
+      <div class="ladder-scroll-wrapper">
+        <div class="ladder-stage" id="ladderStage">
+          <!-- Стрелка энергии E слева -->
+          <div class="energy-axis">
+            <span class="energy-label">E</span>
+            <div class="energy-axis-line"></div>
+          </div>
+          <!-- Ступени соприкасающихся ячеек генерируются JS -->
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    const ELEMENTS = [
+      { z: 1, s: 'H', n: 'Водород' },
+      { z: 2, s: 'He', n: 'Гелий' },
+      { z: 3, s: 'Li', n: 'Литий' },
+      { z: 4, s: 'Be', n: 'Бериллий' },
+      { z: 5, s: 'B', n: 'Бор' },
+      { z: 6, s: 'C', n: 'Углерод' },
+      { z: 7, s: 'N', n: 'Азот' },
+      { z: 8, s: 'O', n: 'Кислород' },
+      { z: 9, s: 'F', n: 'Фтор' },
+      { z: 10, s: 'Ne', n: 'Неон' },
+      { z: 11, s: 'Na', n: 'Натрий' },
+      { z: 12, s: 'Mg', n: 'Магний' },
+      { z: 13, s: 'Al', n: 'Алюминий' },
+      { z: 14, s: 'Si', n: 'Кремний' },
+      { z: 15, s: 'P', n: 'Фосфор' },
+      { z: 16, s: 'S', n: 'Сера' },
+      { z: 17, s: 'Cl', n: 'Хлор' },
+      { z: 18, s: 'Ar', n: 'Аргон' },
+      { z: 19, s: 'K', n: 'Калий' },
+      { z: 20, s: 'Ca', n: 'Кальций' },
+      { z: 21, s: 'Sc', n: 'Скандий' },
+      { z: 22, s: 'Ti', n: 'Титан' },
+      { z: 23, s: 'V', n: 'Ванадий' },
+      { z: 24, s: 'Cr', n: 'Хром' },
+      { z: 25, s: 'Mn', n: 'Марганец' },
+      { z: 26, s: 'Fe', n: 'Железо' },
+      { z: 27, s: 'Co', n: 'Кобальт' },
+      { z: 28, s: 'Ni', n: 'Никель' },
+      { z: 29, s: 'Cu', n: 'Медь' },
+      { z: 30, s: 'Zn', n: 'Цинк' },
+      { z: 31, s: 'Ga', n: 'Галлий' },
+      { z: 32, s: 'Ge', n: 'Германий' },
+      { z: 33, s: 'As', n: 'Мышьяк' },
+      { z: 34, s: 'Se', n: 'Селен' },
+      { z: 35, s: 'Br', n: 'Бром' },
+      { z: 36, s: 'Kr', n: 'Криптон' }
+    ];
+
+    // Порядок подуровней по возрастанию энергии (как идет лесенка в школе)
+    const SUB_SHELLS = [
+      { name: '1s', n: 1, boxes: 1, max: 2 },
+      { name: '2s', n: 2, boxes: 1, max: 2 },
+      { name: '2p', n: 2, boxes: 3, max: 6 },
+      { name: '3s', n: 3, boxes: 1, max: 2 },
+      { name: '3p', n: 3, boxes: 3, max: 6 },
+      { name: '4s', n: 4, boxes: 1, max: 2 },
+      { name: '3d', n: 3, boxes: 5, max: 10 },
+      { name: '4p', n: 4, boxes: 3, max: 6 }
+    ];
+
+    // Расчет заполнения с учетом правил Хунда и проскока электронов
+    function getConfiguration(electrons, z) {
+      let subs = SUB_SHELLS.map(s => ({ ...s, count: 0 }));
+      let rem = electrons;
+
+      for (let s of subs) {
+        if (rem <= 0) break;
+        let take = Math.min(rem, s.max);
+        s.count = take;
+        rem -= take;
+      }
+
+      // Проскок электрона (Cr и Cu)
+      if (electrons === z) {
+        if (z === 24) { // Cr: 4s1 3d5
+          let s4 = subs.find(s => s.name === '4s');
+          let d3 = subs.find(s => s.name === '3d');
+          if (s4 && d3) { s4.count = 1; d3.count = 5; }
+        } else if (z === 29) { // Cu: 4s1 3d10
+          let s4 = subs.find(s => s.name === '4s');
+          let d3 = subs.find(s => s.name === '3d');
+          if (s4 && d3) { s4.count = 1; d3.count = 10; }
+        }
+      }
+
+      // Показываем все подуровни вплоть до последнего занятого
+      let lastIndex = -1;
+      for (let i = subs.length - 1; i >= 0; i--) {
+        if (subs[i].count > 0) {
+          lastIndex = i;
+          break;
+        }
+      }
+      return subs.slice(0, Math.max(1, lastIndex + 1));
+    }
+
+    // Стрелки по правилу Хунда
+    function getCellArrows(boxCount, eCount) {
+      let cells = Array.from({ length: boxCount }, () => ({ up: false, down: false }));
+      for (let i = 0; i < Math.min(eCount, boxCount); i++) cells[i].up = true;
+      if (eCount > boxCount) {
+        let extra = eCount - boxCount;
+        for (let i = 0; i < extra; i++) cells[i].down = true;
+      }
+      return cells;
+    }
+
+    function update() {
+      const z = Math.min(36, Math.max(1, parseInt(document.getElementById('chargeInput').value) || 1));
+      const ion = parseInt(document.getElementById('ionCharge').value) || 0;
+      const elem = ELEMENTS.find(e => e.z === z) || { z: z, s: `E`, n: `Элемент` };
+      const totalElectrons = Math.max(0, z - ion);
+
+      // Ионный индекс в символе
+      let ionText = '';
+      if (ion > 0) ionText = ion === 1 ? '+' : `${ion}+`;
+      if (ion < 0) ionText = ion === -1 ? '−' : `${Math.abs(ion)}−`;
+      
+      document.getElementById('displaySymbol').innerHTML = `${elem.s}<sup>${ionText}</sup>`;
+      document.getElementById('displayName').textContent = `${elem.n} (${elem.z})`;
+      document.getElementById('electronCountBadge').textContent = `${totalElectrons} ē`;
+
+      // Расчет подуровней
+      const activeSubs = getConfiguration(totalElectrons, z);
+
+      // 1. Дуги уровней (+Z) ) )
+      const shellCounts = {};
+      activeSubs.forEach(s => {
+        shellCounts[s.n] = (shellCounts[s.n] || 0) + s.count;
+      });
+      const maxN = Math.max(1, ...Object.keys(shellCounts).map(Number));
+      let bohrHTML = `<div class="nucleus-circle">+${z}</div>`;
+      for (let n = 1; n <= maxN; n++) {
+        bohrHTML += `
+          <div class="shell-column">
+            <span class="arc-symbol">)</span>
+            <span class="shell-electrons">${shellCounts[n] || 0}ē</span>
+          </div>
+        `;
+      }
+      document.getElementById('bohrDiagram').innerHTML = bohrHTML;
+
+      // 2. Формула (1s² 2s² 2p²...)
+      const filledOnly = activeSubs.filter(s => s.count > 0);
+      document.getElementById('formulaShort').innerHTML = filledOnly.length > 0
+        ? filledOnly.map(s => `${s.name}<sup>${s.count}</sup>`).join(' ')
+        : '0ē';
+
+      // 3. Превью последней ячейки в верхней строчке
+      const lastSub = activeSubs[activeSubs.length - 1];
+      const previewEl = document.getElementById('lastSubshellPreview');
+      if (lastSub) {
+        let cells = getCellArrows(lastSub.boxes, lastSub.count);
+        let boxesHTML = cells.map(c => `
+          <div class="ladder-box" style="width:34px;height:34px;font-size:18px;">
+            ${c.up ? '<span class="arrow-up">↑</span>' : ''}
+            ${c.down ? '<span class="arrow-down">↓</span>' : ''}
+          </div>
+        `).join('');
+        previewEl.innerHTML = `
+          <div style="display:flex; flex-direction:column; align-items:center; gap:4px;">
+            <div style="display:flex;">${boxesHTML}</div>
+            <div style="font-size:13px; font-weight:700; color:var(--text-muted);">${lastSub.name}</div>
+          </div>
+        `;
+      }
+
+      // 4. ПОСТРОЕНИЕ СТУПЕНЧАТОЙ ЛЕСЕНКИ (КАК В ТЕТРАДИ)
+      const stage = document.getElementById('ladderStage');
+      
+      // Геометрия ячейки
+      const boxSize = 38;      // размер квадрата в пикселях
+      const borderOverlap = 2; // толщина границы для идеального стыка вершин
+      const stepShiftY = boxSize - borderOverlap; // высота одного шага наверх
+
+      let currentX = 16;
+      let totalSteps = activeSubs.length;
+      let stageHeight = (totalSteps * stepShiftY) + boxSize + 48; // запас под подписи и отступы
+
+      // Очищаем старые ступени (сохраняя ось энергии)
+      const existingSteps = stage.querySelectorAll('.ladder-step');
+      existingSteps.forEach(el => el.remove());
+
+      activeSubs.forEach((sub, index) => {
+        const stepEl = document.createElement('div');
+        stepEl.className = 'ladder-step';
+
+        // Нижний край каждой ступени: ступень (index) поднимается ровно наверх
+        const bottomY = 32 + (index * stepShiftY);
+        stepEl.style.left = `${currentX}px`;
+        stepEl.style.bottom = `${bottomY}px`;
+
+        // Создаем квадраты подуровня
+        const cells = getCellArrows(sub.boxes, sub.count);
+        let boxesHTML = cells.map(c => `
+          <div class="ladder-box">
+            ${c.up ? '<span class="arrow-up">↑</span>' : ''}
+            ${c.down ? '<span class="arrow-down">↓</span>' : ''}
+          </div>
+        `).join('');
+
+        stepEl.innerHTML = `
+          <div class="ladder-boxes-row">${boxesHTML}</div>
+          <div class="ladder-step-label">${sub.name}</div>
+        `;
+
+        stage.appendChild(stepEl);
+
+        // Следующая ступень начинается ровно там, где кончается текущая по X
+        // С вычетом 2px границы, чтобы правая грань соприкасалась с левой гранью следующего блока
+        const subWidth = (sub.boxes * boxSize) - ((sub.boxes - 1) * borderOverlap);
+        currentX += subWidth - borderOverlap;
+      });
+
+      stage.style.width = `${Math.max(currentX + 30, 480)}px`;
+      stage.style.height = `${stageHeight}px`;
+    }
+
+    // Инициализация селекта
+    const select = document.getElementById('elementSelect');
+    ELEMENTS.forEach(el => {
+      let opt = document.createElement('option');
+      opt.value = el.z;
+      opt.textContent = `${el.z}. ${el.s} — ${el.n}`;
+      if (el.z === 6) opt.selected = true;
+      select.appendChild(opt);
+    });
+
+    // Слушатели событий
+    select.addEventListener('change', (e) => {
+      document.getElementById('chargeInput').value = e.target.value;
+      update();
+    });
+
+    document.getElementById('chargeInput').addEventListener('input', (e) => {
+      let val = Math.min(36, Math.max(1, parseInt(e.target.value) || 1));
+      select.value = val;
+      update();
+    });
+
+    document.getElementById('ionCharge').addEventListener('change', update);
+
+    document.querySelectorAll('.chip').forEach(btn => {
+      btn.addEventListener('click', () => {
+        let z = btn.dataset.z;
+        document.getElementById('chargeInput').value = z;
+        select.value = z;
+        document.getElementById('ionCharge').value = 0;
+        update();
+      });
+    });
+
+    // Переключение между 3 темами: Тетрадь ✎ -> Доска 🪨 -> Неон ⚡
+    const themes = ['theme-notebook', 'theme-chalkboard', 'theme-dark'];
+    const themeNames = ['Тетрадь ✎', 'Доска 🪨', 'Неон ⚡'];
+    let currentThemeIdx = 0;
+
+    const themeBtn = document.getElementById('themeBtn');
+    themeBtn.addEventListener('click', () => {
+      document.body.classList.remove(themes[currentThemeIdx]);
+      currentThemeIdx = (currentThemeIdx + 1) % themes.length;
+      if (themes[currentThemeIdx] !== 'theme-dark') {
+        document.body.classList.add(themes[currentThemeIdx]);
+      }
+      themeBtn.textContent = `🎨 Тема: ${themeNames[currentThemeIdx]}`;
+    });
+
+    // Первый запуск (на Углероде Z=6 как на фото)
+    update();
+  </script>
+</body>
+</html>
