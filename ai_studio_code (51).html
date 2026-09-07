@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Электронное строение всех 118 элементов — Лесенка орбиталей</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card-bg: rgba(30, 41, 59, 0.75);
+      --card-border: rgba(255, 255, 255, 0.12);
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent: #38bdf8;
+      --accent-glow: rgba(56, 189, 248, 0.25);
+      --cell-bg: rgba(15, 23, 42, 0.6);
+      --cell-border: #94a3b8;
+      --arrow-up: #38bdf8;
+      --arrow-down: #f43f5e;
+      --grid-line: rgba(255, 255, 255, 0.05);
+      --font: system-ui, -apple-system, sans-serif;
+    }
+
+    /* 1. Тема «Тетрадь в клетку» (по фото из тетради) */
+    body.theme-notebook {
+      --bg: #f3f5fa;
+      --card-bg: #ffffff;
+      --card-border: #cbd5e1;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --accent: #2563eb;
+      --accent-glow: rgba(37, 99, 235, 0.15);
+      --cell-bg: #ffffff;
+      --cell-border: #1d4ed8; /* Синяя шариковая ручка */
+      --arrow-up: #1e40af;
+      --arrow-down: #dc2626;
+      --grid-line: #dbeafe; /* Тетрадочная клетка */
+      font-family: 'Comic Sans MS', 'Segoe Print', cursive, var(--font);
+    }
+
+    /* 2. Тема «Школьная доска» */
+    body.theme-chalkboard {
+      --bg: #1a3329;
+      --card-bg: rgba(20, 44, 35, 0.9);
+      --card-border: rgba(255, 255, 255, 0.22);
+      --text: #fcfbf7;
+      --text-muted: #cbd5e1;
+      --accent: #fde047;
+      --accent-glow: rgba(253, 224, 71, 0.2);
+      --cell-bg: rgba(12, 30, 24, 0.7);
+      --cell-border: #f1f5f9;
+      --arrow-up: #fef08a;
+      --arrow-down: #93c5fd;
+      --grid-line: rgba(255, 255, 255, 0.06);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      min-height: 100vh;
+      padding: 20px 14px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      transition: background-color 0.25s, color 0.25s;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 1150px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    /* Панель управления */
+    .controls-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      backdrop-filter: blur(10px);
+      border-radius: 16px;
+      padding: 18px 22px;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 14px;
+      align-items: end;
+    }
+
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    label {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    input, select, button {
+      background: var(--cell-bg);
+      border: 1px solid var(--card-border);
+      color: var(--text);
+      padding: 9px 12px;
+      border-radius: 10px;
+      font-size: 14px;
+      outline: none;
+      font-family: inherit;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    input:focus, select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+
+    .btn-action {
+      cursor: pointer;
+      font-weight: 600;
+    }
+    .btn-action:hover {
+      filter: brightness(1.1);
+    }
+
+    .quick-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      grid-column: 1 / -1;
+      padding-top: 4px;
+      align-items: center;
+    }
+
+    .chip {
+      padding: 4px 10px;
+      border-radius: 16px;
+      font-size: 12px;
+      cursor: pointer;
+      border: 1px solid var(--card-border);
+      background: var(--cell-bg);
+      color: var(--text);
+    }
+    .chip:hover, .chip.active {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+    body.theme-chalkboard .chip:hover {
+      color: #1a3329;
+    }
+
+    /* ВЕРХНЯЯ СТРОЧКА КАК НА ДОСКЕ */
+    .chalkboard-header-row {
+      background: var(--card-bg);
+      border: 2px solid var(--card-border);
+      backdrop-filter: blur(10px);
+      border-radius: 18px;
+      padding: 20px 24px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      overflow-x: auto;
+    }
+
+    .element-symbol-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-width: 85px;
+    }
+    .element-symbol {
+      font-size: 52px;
+      font-weight: 800;
+      line-height: 1;
+      color: var(--accent);
+    }
+    .element-name {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 4px;
+      text-align: center;
+    }
+
+    /* (+Z) ) ) */
+    .bohr-diagram {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 8px 14px;
+      background: rgba(0, 0, 0, 0.08);
+      border-radius: 12px;
+      flex-shrink: 0;
+    }
+
+    .nucleus-circle {
+      width: 52px;
+      height: 52px;
+      border: 2px solid var(--text);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 17px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .shell-column {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      min-width: 26px;
+    }
+
+    .arc-symbol {
+      font-size: 42px;
+      line-height: 44px;
+      font-weight: 300;
+      user-select: none;
+    }
+
+    .shell-electrons {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    /* Формула */
+    .formula-wrapper {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      align-items: flex-start;
+      min-width: 220px;
+    }
+
+    .electron-formula {
+      font-size: 22px;
+      font-family: 'Courier New', Courier, monospace;
+      font-weight: 700;
+      white-space: nowrap;
+      padding: 8px 14px;
+      background: rgba(0, 0, 0, 0.08);
+      border-radius: 10px;
+      max-width: 440px;
+      overflow-x: auto;
+    }
+
+    .electron-formula sup {
+      color: var(--accent);
+      font-size: 15px;
+    }
+
+    .formula-toggle-btn {
+      background: transparent;
+      border: none;
+      font-size: 11px;
+      color: var(--text-muted);
+      cursor: pointer;
+      text-decoration: underline;
+      padding: 0;
+    }
+    .formula-toggle-btn:hover {
+      color: var(--accent);
+    }
+
+    /* КАРТОЧКА ЛЕСЕНКИ ОРБИТАЛЕЙ */
+    .ladder-card {
+      background: var(--card-bg);
+      border: 2px solid var(--card-border);
+      border-radius: 18px;
+      padding: 20px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+      position: relative;
+    }
+
+    .ladder-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .ladder-title {
+      font-size: 17px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .ladder-tools {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .btn-small {
+      padding: 5px 10px;
+      font-size: 12px;
+      cursor: pointer;
+      border-radius: 8px;
+    }
+
+    .ladder-scroll-wrapper {
+      width: 100%;
+      overflow-x: auto;
+      padding-bottom: 14px;
+      scroll-behavior: smooth;
+    }
+
+    .ladder-stage {
+      position: relative;
+      background-size: 36px 36px;
+      background-image: 
+        linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+        linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
+      border-radius: 12px;
+      border: 1px dashed var(--card-border);
+      margin-left: 34px;
+    }
+
+    /* Ось энергии слева */
+    .energy-axis {
+      position: absolute;
+      left: -28px;
+      bottom: 25px;
+      top: 15px;
+      width: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      user-select: none;
+    }
+
+    .energy-axis-line {
+      width: 2px;
+      height: 100%;
+      background: var(--text-muted);
+      position: relative;
+    }
+
+    .energy-axis-line::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -4px;
+      width: 0;
+      height: 0;
+      border-left: 5px solid transparent;
+      border-right: 5px solid transparent;
+      border-bottom: 9px solid var(--text-muted);
+    }
+
+    .energy-label {
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--accent);
+      margin-bottom: 4px;
+    }
+
+    /* Ступень подуровня */
+    .ladder-step {
+      position: absolute;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .ladder-boxes-row {
+      display: flex;
+    }
+
+    .ladder-box {
+      width: 36px;
+      height: 36px;
+      border: 2px solid var(--cell-border);
+      margin-right: -2px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1px;
+      background: var(--cell-bg);
+      font-size: 19px;
+      font-weight: 900;
+      user-select: none;
+      box-sizing: border-box;
+    }
+
+    .ladder-step-label {
+      position: absolute;
+      top: 100%;
+      margin-top: 4px;
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--text);
+      white-space: nowrap;
+    }
+
+    .arrow-up { color: var(--arrow-up); line-height: 1; }
+    .arrow-down { color: var(--arrow-down); line-height: 1; }
+
+    @media (max-width: 768px) {
+      .chalkboard-header-row {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .electron-formula {
+        font-size: 18px;
+        max-width: 100%;
+      }
+    }
+  </style>
+</head>
+<body class="theme-notebook">
+
+  <div class="container">
+    
+    <!-- Панель управления -->
+    <div class="controls-card">
+      <div class="control-group" style="grid-column: span 2;">
+        <label for="elementSelect">Выбор элемента (Все 118 по периодам)</label>
+        <select id="elementSelect"></select>
+      </div>
+
+      <div class="control-group">
+        <label for="chargeInput">Атомный № (Z: 1–118)</label>
+        <input type="number" id="chargeInput" min="1" max="118" value="6">
+      </div>
+
+      <div class="control-group">
+        <label for="ionCharge">Заряд иона</label>
+        <select id="ionCharge">
+          <option value="0">0 (Нейтральный)</option>
+          <option value="1">+1</option>
+          <option value="2">+2</option>
+          <option value="3">+3</option>
+          <option value="4">+4</option>
+          <option value="-1">-1</option>
+          <option value="-2">-2</option>
+          <option value="-3">-3</option>
+        </select>
+      </div>
+
+      <div class="control-group">
+        <label>Оформление</label>
+        <button class="btn-action" id="themeBtn">🎨 Тема: Тетрадь ✎</button>
+      </div>
+
+      <!-- Быстрый выбор интересных элементов -->
+      <div class="quick-chips">
+        <span style="font-size: 12px; color: var(--text-muted); margin-right: 4px;">Быстрый выбор:</span>
+        <button class="chip" data-z="1">H</button>
+        <button class="chip" data-z="6">C</button>
+        <button class="chip" data-z="8">O</button>
+        <button class="chip" data-z="11">Na</button>
+        <button class="chip" data-z="24">Cr (проскок)</button>
+        <button class="chip" data-z="26">Fe</button>
+        <button class="chip" data-z="29">Cu (проскок)</button>
+        <button class="chip" data-z="47">Ag (проскок)</button>
+        <button class="chip" data-z="57">La (лантан)</button>
+        <button class="chip" data-z="79">Au (золото)</button>
+        <button class="chip" data-z="92">U (уран)</button>
+        <button class="chip" data-z="118">Og (оганесон)</button>
+      </div>
+    </div>
+
+    <!-- ВЕРХНЯЯ СТРОЧКА КАК НА ДОСКЕ -->
+    <div class="chalkboard-header-row">
+      <div class="element-symbol-box">
+        <div class="element-symbol" id="displaySymbol">C</div>
+        <div class="element-name" id="displayName">Углерод (6)</div>
+      </div>
+
+      <!-- (+Z) ) ) ) ) ) ) -->
+      <div class="bohr-diagram" id="bohrDiagram"></div>
+
+      <!-- Формула -->
+      <div class="formula-wrapper">
+        <div class="electron-formula" id="formulaDisplay"></div>
+        <button class="formula-toggle-btn" id="formulaToggleBtn">Показать краткую формулу [Благородный газ]</button>
+      </div>
+
+      <!-- Внешняя ячейка в строчке -->
+      <div id="lastSubshellPreview"></div>
+    </div>
+
+    <!-- ЭНЕРГЕТИЧЕСКАЯ ЛЕСЕНКА ОРБИТАЛЕЙ -->
+    <div class="ladder-card">
+      <div class="ladder-header">
+        <div class="ladder-title">
+          <span>Квантовая лесенка орбиталей</span>
+          <span style="font-size: 13px; font-weight: 600; color: var(--accent);" id="electronCountBadge">6 ē</span>
+        </div>
+        <div class="ladder-tools">
+          <button class="btn-small" id="toggleValenceBtn">Показать: Все уровни</button>
+          <button class="btn-small" id="scrollToStartBtn">⬅ 1s</button>
+          <button class="btn-small" id="scrollToEndBtn">К внешнему ➡</button>
+        </div>
+      </div>
+
+      <div class="ladder-scroll-wrapper" id="ladderWrapper">
+        <div class="ladder-stage" id="ladderStage">
+          <div class="energy-axis">
+            <span class="energy-label">E</span>
+            <div class="energy-axis-line"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // ВСЕ 118 ЭЛЕМЕНТОВ
+    const ALL_118_ELEMENTS = [
+      { z: 1, s: "H", n: "Водород", p: 1 }, { z: 2, s: "He", n: "Гелий", p: 1 },
+      { z: 3, s: "Li", n: "Литий", p: 2 }, { z: 4, s: "Be", n: "Бериллий", p: 2 },
+      { z: 5, s: "B", n: "Бор", p: 2 }, { z: 6, s: "C", n: "Углерод", p: 2 },
+      { z: 7, s: "N", n: "Азот", p: 2 }, { z: 8, s: "O", n: "Кислород", p: 2 },
+      { z: 9, s: "F", n: "Фтор", p: 2 }, { z: 10, s: "Ne", n: "Неон", p: 2 },
+      { z: 11, s: "Na", n: "Натрий", p: 3 }, { z: 12, s: "Mg", n: "Магний", p: 3 },
+      { z: 13, s: "Al", n: "Алюминий", p: 3 }, { z: 14, s: "Si", n: "Кремний", p: 3 },
+      { z: 15, s: "P", n: "Фосфор", p: 3 }, { z: 16, s: "S", n: "Сера", p: 3 },
+      { z: 17, s: "Cl", n: "Хлор", p: 3 }, { z: 18, s: "Ar", n: "Аргон", p: 3 },
+      { z: 19, s: "K", n: "Калий", p: 4 }, { z: 20, s: "Ca", n: "Кальций", p: 4 },
+      { z: 21, s: "Sc", n: "Скандий", p: 4 }, { z: 22, s: "Ti", n: "Титан", p: 4 },
+      { z: 23, s: "V", n: "Ванадий", p: 4 }, { z: 24, s: "Cr", n: "Хром", p: 4 },
+      { z: 25, s: "Mn", n: "Марганец", p: 4 }, { z: 26, s: "Fe", n: "Железо", p: 4 },
+      { z: 27, s: "Co", n: "Кобальт", p: 4 }, { z: 28, s: "Ni", n: "Никель", p: 4 },
+      { z: 29, s: "Cu", n: "Медь", p: 4 }, { z: 30, s: "Zn", n: "Цинк", p: 4 },
+      { z: 31, s: "Ga", n: "Галлий", p: 4 }, { z: 32, s: "Ge", n: "Германий", p: 4 },
+      { z: 33, s: "As", n: "Мышьяк", p: 4 }, { z: 34, s: "Se", n: "Селен", p: 4 },
+      { z: 35, s: "Br", n: "Бром", p: 4 }, { z: 36, s: "Kr", n: "Криптон", p: 4 },
+      { z: 37, s: "Rb", n: "Рубидий", p: 5 }, { z: 38, s: "Sr", n: "Стронций", p: 5 },
+      { z: 39, s: "Y", n: "Иттрий", p: 5 }, { z: 40, s: "Zr", n: "Цирконий", p: 5 },
+      { z: 41, s: "Nb", n: "Ниобий", p: 5 }, { z: 42, s: "Mo", n: "Молибден", p: 5 },
+      { z: 43, s: "Tc", n: "Технеций", p: 5 }, { z: 44, s: "Ru", n: "Рутений", p: 5 },
+      { z: 45, s: "Rh", n: "Родий", p: 5 }, { z: 46, s: "Pd", n: "Палладий", p: 5 },
+      { z: 47, s: "Ag", n: "Серебро", p: 5 }, { z: 48, s: "Cd", n: "Кадмий", p: 5 },
+      { z: 49, s: "In", n: "Индий", p: 5 }, { z: 50, s: "Sn", n: "Олово", p: 5 },
+      { z: 51, s: "Sb", n: "Сурьма", p: 5 }, { z: 52, s: "Te", n: "Теллур", p: 5 },
+      { z: 53, s: "I", n: "Иод", p: 5 }, { z: 54, s: "Xe", n: "Ксенон", p: 5 },
+      { z: 55, s: "Cs", n: "Цезий", p: 6 }, { z: 56, s: "Ba", n: "Барий", p: 6 },
+      { z: 57, s: "La", n: "Лантан", p: 6 }, { z: 58, s: "Ce", n: "Церий", p: 6 },
+      { z: 59, s: "Pr", n: "Празеодим", p: 6 }, { z: 60, s: "Nd", n: "Неодим", p: 6 },
+      { z: 61, s: "Pm", n: "Прометий", p: 6 }, { z: 62, s: "Sm", n: "Самарий", p: 6 },
+      { z: 63, s: "Eu", n: "Европий", p: 6 }, { z: 64, s: "Gd", n: "Гадолиний", p: 6 },
+      { z: 65, s: "Tb", n: "Тербий", p: 6 }, { z: 66, s: "Dy", n: "Диспрозий", p: 6 },
+      { z: 67, s: "Ho", n: "Гольмий", p: 6 }, { z: 68, s: "Er", n: "Эрбий", p: 6 },
+      { z: 69, s: "Tm", n: "Тулий", p: 6 }, { z: 70, s: "Yb", n: "Иттербий", p: 6 },
+      { z: 71, s: "Lu", n: "Лютеций", p: 6 }, { z: 72, s: "Hf", n: "Гафний", p: 6 },
+      { z: 73, s: "Ta", n: "Тантал", p: 6 }, { z: 74, s: "W", n: "Вольфрам", p: 6 },
+      { z: 75, s: "Re", n: "Рений", p: 6 }, { z: 76, s: "Os", n: "Осмий", p: 6 },
+      { z: 77, s: "Ir", n: "Иридий", p: 6 }, { z: 78, s: "Pt", n: "Платина", p: 6 },
+      { z: 79, s: "Au", n: "Золото", p: 6 }, { z: 80, s: "Hg", n: "Ртуть", p: 6 },
+      { z: 81, s: "Tl", n: "Таллий", p: 6 }, { z: 82, s: "Pb", n: "Свинец", p: 6 },
+      { z: 83, s: "Bi", n: "Висмут", p: 6 }, { z: 84, s: "Po", n: "Полоний", p: 6 },
+      { z: 85, s: "At", n: "Астат", p: 6 }, { z: 86, s: "Rn", n: "Радон", p: 6 },
+      { z: 87, s: "Fr", n: "Франций", p: 7 }, { z: 88, s: "Ra", n: "Радий", p: 7 },
+      { z: 89, s: "Ac", n: "Актиний", p: 7 }, { z: 90, s: "Th", n: "Торий", p: 7 },
+      { z: 91, s: "Pa", n: "Протактиний", p: 7 }, { z: 92, s: "U", n: "Уран", p: 7 },
+      { z: 93, s: "Np", n: "Нептуний", p: 7 }, { z: 94, s: "Pu", n: "Плутоний", p: 7 },
+      { z: 95, s: "Am", n: "Америций", p: 7 }, { z: 96, s: "Cm", n: "Кюрий", p: 7 },
+      { z: 97, s: "Bk", n: "Берклий", p: 7 }, { z: 98, s: "Cf", n: "Калифорний", p: 7 },
+      { z: 99, s: "Es", n: "Эйнштейний", p: 7 }, { z: 100, s: "Fm", n: "Фермий", p: 7 },
+      { z: 101, s: "Md", n: "Менделевий", p: 7 }, { z: 102, s: "No", n: "Нобелий", p: 7 },
+      { z: 103, s: "Lr", n: "Лоуренсий", p: 7 }, { z: 104, s: "Rf", n: "Резерфордий", p: 7 },
+      { z: 105, s: "Db", n: "Дубний", p: 7 }, { z: 106, s: "Sg", n: "Сиборгий", p: 7 },
+      { z: 107, s: "Bh", n: "Борий", p: 7 }, { z: 108, s: "Hs", n: "Хассий", p: 7 },
+      { z: 109, s: "Mt", n: "Мейтнерий", p: 7 }, { z: 110, s: "Ds", n: "Дармштадтий", p: 7 },
+      { z: 111, s: "Rg", n: "Рентгений", p: 7 }, { z: 112, s: "Cn", n: "Коперниций", p: 7 },
+      { z: 113, s: "Nh", n: "Нихоний", p: 7 }, { z: 114, s: "Fl", n: "Флеровий", p: 7 },
+      { z: 115, s: "Mc", n: "Московий", p: 7 }, { z: 116, s: "Lv", n: "Ливерморий", p: 7 },
+      { z: 117, s: "Ts", n: "Теннессин", p: 7 }, { z: 118, s: "Og", n: "Оганесон", p: 7 }
+    ];
+
+    // Порядок подуровней по принципу наименьшей энергии
+    const ALL_SUBSHELLS = [
+      { name: '1s', n: 1, type: 's', boxes: 1, max: 2 },
+      { name: '2s', n: 2, type: 's', boxes: 1, max: 2 },
+      { name: '2p', n: 2, type: 'p', boxes: 3, max: 6 },
+      { name: '3s', n: 3, type: 's', boxes: 1, max: 2 },
+      { name: '3p', n: 3, type: 'p', boxes: 3, max: 6 },
+      { name: '4s', n: 4, type: 's', boxes: 1, max: 2 },
+      { name: '3d', n: 3, type: 'd', boxes: 5, max: 10 },
+      { name: '4p', n: 4, type: 'p', boxes: 3, max: 6 },
+      { name: '5s', n: 5, type: 's', boxes: 1, max: 2 },
+      { name: '4d', n: 4, type: 'd', boxes: 5, max: 10 },
+      { name: '5p', n: 5, type: 'p', boxes: 3, max: 6 },
+      { name: '6s', n: 6, type: 's', boxes: 1, max: 2 },
+      { name: '4f', n: 4, type: 'f', boxes: 7, max: 14 },
+      { name: '5d', n: 5, type: 'd', boxes: 5, max: 10 },
+      { name: '6p', n: 6, type: 'p', boxes: 3, max: 6 },
+      { name: '7s', n: 7, type: 's', boxes: 1, max: 2 },
+      { name: '5f', n: 5, type: 'f', boxes: 7, max: 14 },
+      { name: '6d', n: 6, type: 'd', boxes: 5, max: 10 },
+      { name: '7p', n: 7, type: 'p', boxes: 3, max: 6 }
+    ];
+
+    // Химические исключения (проскок электрона)
+    const EXCEPTIONS = {
+      24: { '4s': 1, '3d': 5 },
+      29: { '4s': 1, '3d': 10 },
+      41: { '5s': 1, '4d': 4 },
+      42: { '5s': 1, '4d': 5 },
+      44: { '5s': 1, '4d': 7 },
+      45: { '5s': 1, '4d': 8 },
+      46: { '5s': 0, '4d': 10 },
+      47: { '5s': 1, '4d': 10 },
+      57: { '6s': 2, '5d': 1, '4f': 0 },
+      58: { '6s': 2, '4f': 1, '5d': 1 },
+      64: { '6s': 2, '4f': 7, '5d': 1 },
+      78: { '6s': 1, '5d': 9 },
+      79: { '6s': 1, '5d': 10 },
+      89: { '7s': 2, '6d': 1, '5f': 0 },
+      90: { '7s': 2, '6d': 2, '5f': 0 },
+      91: { '7s': 2, '5f': 2, '6d': 1 },
+      92: { '7s': 2, '5f': 3, '6d': 1 },
+      93: { '7s': 2, '5f': 4, '6d': 1 },
+      96: { '7s': 2, '5f': 7, '6d': 1 },
+      103: { '7s': 2, '5f': 14, '7p': 1, '6d': 0 }
+    };
+
+    // Благородные газы для кратких формул
+    const NOBLE_GASES = [
+      { z: 118, s: 'Og' }, { z: 86, s: 'Rn' }, { z: 54, s: 'Xe' },
+      { z: 36, s: 'Kr' }, { z: 18, s: 'Ar' }, { z: 10, s: 'Ne' }, { z: 2, s: 'He' }
+    ];
+
+    let showShortFormula = false;
+    let showValenceOnly = false;
+
+    // Расчет строения атома/иона
+    function calculateElectrons(z, ion) {
+      let subs = ALL_SUBSHELLS.map(s => ({ ...s, count: 0 }));
+      let rem = z;
+      for (let s of subs) {
+        if (rem <= 0) break;
+        let take = Math.min(rem, s.max);
+        s.count = take;
+        rem -= take;
+      }
+
+      // Применяем проскоки электронов для нейтрального состояния
+      if (EXCEPTIONS[z]) {
+        for (let [k, v] of Object.entries(EXCEPTIONS[z])) {
+          let found = subs.find(s => s.name === k);
+          if (found) found.count = v;
+        }
+      }
+
+      // Ионизация (удаление электронов сначала с внешних n, затем p/s/d)
+      if (ion > 0) {
+        let toRemove = ion;
+        const lMap = { s: 0, p: 1, d: 2, f: 3 };
+        while (toRemove > 0) {
+          // Ищем подуровень с наибольшим главным квантовым числом n, затем наибольшим типом
+          let candidates = subs.filter(s => s.count > 0);
+          if (candidates.length === 0) break;
+          candidates.sort((a, b) => {
+            if (b.n !== a.n) return b.n - a.n;
+            return lMap[b.type] - lMap[a.type];
+          });
+          let target = candidates[0];
+          let take = Math.min(toRemove, target.count);
+          target.count -= take;
+          toRemove -= take;
+        }
+      } else if (ion < 0) {
+        // Присоединение электронов (анионы)
+        let toAdd = Math.abs(ion);
+        for (let s of subs) {
+          if (toAdd <= 0) break;
+          if (s.count < s.max) {
+            let space = s.max - s.count;
+            let take = Math.min(toAdd, space);
+            s.count += take;
+            toAdd -= take;
+          }
+        }
+      }
+
+      return subs;
+    }
+
+    // Стрелки по правилу Хунда
+    function getCellArrows(boxCount, eCount) {
+      let cells = Array.from({ length: boxCount }, () => ({ up: false, down: false }));
+      for (let i = 0; i < Math.min(eCount, boxCount); i++) cells[i].up = true;
+      if (eCount > boxCount) {
+        let extra = eCount - boxCount;
+        for (let i = 0; i < extra; i++) cells[i].down = true;
+      }
+      return cells;
+    }
+
+    function update() {
+      const z = Math.min(118, Math.max(1, parseInt(document.getElementById('chargeInput').value) || 1));
+      const ion = parseInt(document.getElementById('ionCharge').value) || 0;
+      const elem = ALL_118_ELEMENTS.find(e => e.z === z) || ALL_118_ELEMENTS[0];
+      const totalElectrons = Math.max(0, z - ion);
+
+      // 1. Символ и имя
+      let ionText = '';
+      if (ion > 0) ionText = ion === 1 ? '+' : `${ion}+`;
+      if (ion < 0) ionText = ion === -1 ? '−' : `${Math.abs(ion)}−`;
+      
+      document.getElementById('displaySymbol').innerHTML = `${elem.s}<sup>${ionText}</sup>`;
+      document.getElementById('displayName').textContent = `${elem.n} (${elem.z})`;
+      document.getElementById('electronCountBadge').textContent = `${totalElectrons} ē`;
+
+      const allSubCalculated = calculateElectrons(z, ion);
+
+      // 2. Дуги энергетических уровней (+Z) ) )
+      const shellCounts = {};
+      allSubCalculated.forEach(s => {
+        shellCounts[s.n] = (shellCounts[s.n] || 0) + s.count;
+      });
+      const maxN = Math.max(1, ...Object.keys(shellCounts).map(Number));
+      let bohrHTML = `<div class="nucleus-circle">+${z}</div>`;
+      for (let n = 1; n <= maxN; n++) {
+        bohrHTML += `
+          <div class="shell-column">
+            <span class="arc-symbol">)</span>
+            <span class="shell-electrons">${shellCounts[n] || 0}ē</span>
+          </div>
+        `;
+      }
+      document.getElementById('bohrDiagram').innerHTML = bohrHTML;
+
+      // 3. Формула (полная или краткая)
+      const filledOnly = allSubCalculated.filter(s => s.count > 0);
+      let formulaHTML = '';
+
+      if (showShortFormula && totalElectrons > 2) {
+        let core = NOBLE_GASES.find(ng => ng.z < totalElectrons);
+        if (core) {
+          let coreSubs = calculateElectrons(core.z, 0);
+          let valenceSubs = [];
+          allSubCalculated.forEach(s => {
+            let cS = coreSubs.find(cs => cs.name === s.name);
+            let diff = s.count - (cS ? cS.count : 0);
+            if (diff > 0) valenceSubs.push({ name: s.name, count: diff });
+          });
+          formulaHTML = `[${core.s}] ` + valenceSubs.map(s => `${s.name}<sup>${s.count}</sup>`).join(' ');
+        }
+      } 
+      
+      if (!formulaHTML) {
+        formulaHTML = filledOnly.length > 0 
+          ? filledOnly.map(s => `${s.name}<sup>${s.count}</sup>`).join(' ') 
+          : '0ē';
+      }
+      document.getElementById('formulaDisplay').innerHTML = formulaHTML;
+
+      // 4. Превью последней ячейки в верхней строчке
+      const lastOccupied = filledOnly[filledOnly.length - 1] || allSubCalculated[0];
+      const previewEl = document.getElementById('lastSubshellPreview');
+      if (lastOccupied) {
+        let cells = getCellArrows(lastOccupied.boxes, lastOccupied.count);
+        let boxesHTML = cells.map(c => `
+          <div class="ladder-box" style="width:32px;height:32px;font-size:16px;">
+            ${c.up ? '<span class="arrow-up">↑</span>' : ''}
+            ${c.down ? '<span class="arrow-down">↓</span>' : ''}
+          </div>
+        `).join('');
+        previewEl.innerHTML = `
+          <div style="display:flex; flex-direction:column; align-items:center; gap:3px;">
+            <div style="display:flex;">${boxesHTML}</div>
+            <div style="font-size:12px; font-weight:700; color:var(--text-muted);">${lastOccupied.name}</div>
+          </div>
+        `;
+      }
+
+      // 5. ПОСТРОЕНИЕ ЛЕСЕНКИ
+      const stage = document.getElementById('ladderStage');
+      
+      // Определяем отображаемые подуровни
+      let lastIndex = -1;
+      for (let i = allSubCalculated.length - 1; i >= 0; i--) {
+        if (allSubCalculated[i].count > 0) { lastIndex = i; break; }
+      }
+      let activeSubs = allSubCalculated.slice(0, Math.max(1, lastIndex + 1));
+
+      if (showValenceOnly && activeSubs.length > 4) {
+        activeSubs = activeSubs.slice(-4); // последние 4 подуровня
+      }
+
+      const boxSize = 36;
+      const borderOverlap = 2;
+      const stepShiftY = boxSize - borderOverlap;
+
+      let currentX = 16;
+      const totalSteps = activeSubs.length;
+      const stageHeight = (totalSteps * stepShiftY) + boxSize + 46;
+
+      // Очищаем ступени
+      stage.querySelectorAll('.ladder-step').forEach(el => el.remove());
+
+      activeSubs.forEach((sub, index) => {
+        const stepEl = document.createElement('div');
+        stepEl.className = 'ladder-step';
+
+        const bottomY = 32 + (index * stepShiftY);
+        stepEl.style.left = `${currentX}px`;
+        stepEl.style.bottom = `${bottomY}px`;
+
+        const cells = getCellArrows(sub.boxes, sub.count);
+        let boxesHTML = cells.map(c => `
+          <div class="ladder-box">
+            ${c.up ? '<span class="arrow-up">↑</span>' : ''}
+            ${c.down ? '<span class="arrow-down">↓</span>' : ''}
+          </div>
+        `).join('');
+
+        stepEl.innerHTML = `
+          <div class="ladder-boxes-row">${boxesHTML}</div>
+          <div class="ladder-step-label">${sub.name}</div>
+        `;
+
+        stage.appendChild(stepEl);
+
+        const subWidth = (sub.boxes * boxSize) - ((sub.boxes - 1) * borderOverlap);
+        currentX += subWidth - borderOverlap;
+      });
+
+      stage.style.width = `${Math.max(currentX + 30, 460)}px`;
+      stage.style.height = `${stageHeight}px`;
+    }
+
+    // Инициализация выпадающего списка с группировкой по периодам
+    const select = document.getElementById('elementSelect');
+    let currentOptGroup = null;
+    let currentPeriod = 0;
+
+    ALL_118_ELEMENTS.forEach(el => {
+      if (el.p !== currentPeriod) {
+        currentPeriod = el.p;
+        currentOptGroup = document.createElement('optgroup');
+        currentOptGroup.label = `Период ${currentPeriod}`;
+        select.appendChild(currentOptGroup);
+      }
+      let opt = document.createElement('option');
+      opt.value = el.z;
+      opt.textContent = `${el.z}. ${el.s} — ${el.n}`;
+      if (el.z === 6) opt.selected = true;
+      currentOptGroup.appendChild(opt);
+    });
+
+    // Слушатели событий
+    select.addEventListener('change', (e) => {
+      document.getElementById('chargeInput').value = e.target.value;
+      update();
+    });
+
+    document.getElementById('chargeInput').addEventListener('input', (e) => {
+      let val = Math.min(118, Math.max(1, parseInt(e.target.value) || 1));
+      select.value = val;
+      update();
+    });
+
+    document.getElementById('ionCharge').addEventListener('change', update);
+
+    document.querySelectorAll('.chip').forEach(btn => {
+      btn.addEventListener('click', () => {
+        let z = btn.dataset.z;
+        document.getElementById('chargeInput').value = z;
+        select.value = z;
+        document.getElementById('ionCharge').value = 0;
+        update();
+      });
+    });
+
+    // Переключение тем
+    const themes = ['theme-notebook', 'theme-chalkboard', 'theme-dark'];
+    const themeNames = ['Тетрадь ✎', 'Доска 🪨', 'Неон ⚡'];
+    let curTheme = 0;
+    const themeBtn = document.getElementById('themeBtn');
+
+    themeBtn.addEventListener('click', () => {
+      document.body.classList.remove(themes[curTheme]);
+      curTheme = (curTheme + 1) % themes.length;
+      if (themes[curTheme] !== 'theme-dark') {
+        document.body.classList.add(themes[curTheme]);
+      }
+      themeBtn.textContent = `🎨 Тема: ${themeNames[curTheme]}`;
+    });
+
+    // Переключение краткой формулы
+    const formulaToggleBtn = document.getElementById('formulaToggleBtn');
+    formulaToggleBtn.addEventListener('click', () => {
+      showShortFormula = !showShortFormula;
+      formulaToggleBtn.textContent = showShortFormula 
+        ? 'Показать полную формулу (1s²...)' 
+        : 'Показать краткую формулу [Благородный газ]';
+      update();
+    });
+
+    // Переключение вида (вся лесенка / только валентные)
+    const toggleValenceBtn = document.getElementById('toggleValenceBtn');
+    toggleValenceBtn.addEventListener('click', () => {
+      showValenceOnly = !showValenceOnly;
+      toggleValenceBtn.textContent = showValenceOnly ? 'Показать: Все уровни' : 'Показать: Только валентные';
+      update();
+    });
+
+    // Прокрутка лесенки
+    const wrapper = document.getElementById('ladderWrapper');
+    document.getElementById('scrollToStartBtn').addEventListener('click', () => {
+      wrapper.scrollTo({ left: 0, behavior: 'smooth' });
+    });
+    document.getElementById('scrollToEndBtn').addEventListener('click', () => {
+      wrapper.scrollTo({ left: wrapper.scrollWidth, behavior: 'smooth' });
+    });
+
+    // Старт
+    update();
+  </script>
+</body>
+</html>
